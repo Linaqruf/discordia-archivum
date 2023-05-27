@@ -1,0 +1,2 @@
+discord.py-self==2.0.0
+httpx==0.24.1
