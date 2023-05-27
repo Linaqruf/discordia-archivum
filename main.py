@@ -10,13 +10,13 @@ from pathlib import Path
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Discord message scraper')
-    parser.add_argument('--settings', default='settings.json', help='Path to the settings file')
-    parser.add_argument('--output_json', default='data.json', help='Path to the output JSON file')
+    parser.add_argument('--settings', default='./settings.json', help='Path to the settings file')
+    parser.add_argument('--output_json', default='./output.json', help='Path to the output JSON file')
     parser.add_argument('--output_folder', default='./attachments', help='Path to the output attachments folder')
     parser.add_argument('--user_id', type=str, help='Filter messages by user ID')
     parser.add_argument('--skip_message', choices=['none', 'bot', 'user'], default='bot', help='Skip messages sent by bots or users')
     parser.add_argument('--image_only', action='store_true', help='Only scrape messages with attachments')
-    parser.add_argument('--limit', type=int, help='Maximum number of messages to scrape')
+    parser.add_argument('--limit', type=int, default=100, help='Maximum number of messages to scrape')
     parser.add_argument('--token', type=str, help='Discord bot token')
     parser.add_argument('--channel_id', type=int, help='ID of the Discord channel')
     parser.add_argument('--download_attachments', action='store_true', help='Download all attachments')
@@ -72,10 +72,10 @@ def main():
         except Exception as e:
             logging.error(f"Failed to load settings: {e}")
 
-    if not token:
+    if token == "":
         token = input("Enter your Discord bot token: ")
 
-    if not channel_id:
+    if channel_id == "":
         channel_id = int(input("Enter the ID of the channel you want to scrape: ")) # convert input to int
 
     client = discord.Client()
