@@ -72,10 +72,10 @@ def main():
         except Exception as e:
             logging.error(f"Failed to load settings: {e}")
 
-    if token == "":
+    if not token:
         token = input("Enter your Discord bot token: ")
 
-    if channel_id == "":
+    if not channel_id:
         channel_id = int(input("Enter the ID of the channel you want to scrape: ")) # convert input to int
 
     client = discord.Client()
