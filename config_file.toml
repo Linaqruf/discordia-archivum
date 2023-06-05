@@ -1,0 +1,11 @@
+token = ""
+channel_id = null
+
+[arguments]
+output_json = "./output.json"
+output_folder = "./attachments"
+user_id = ""
+skip_message = "bot"
+image_only = false
+limit = 100
+download_attachments = false

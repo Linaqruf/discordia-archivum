@@ -1,16 +1,17 @@
 import os
-import json
 import argparse
 import logging
 import discord
 import httpx
+import json
+import toml
 from typing import Dict, List, Optional
 from httpx import AsyncClient
 from pathlib import Path
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Discord message scraper')
-    parser.add_argument('--settings', default='./settings.json', help='Path to the settings file')
+    parser.add_argument('--config_file', help='Path to the configuration file in TOML format')
     parser.add_argument('--output_json', default='./output.json', help='Path to the output JSON file')
     parser.add_argument('--output_folder', default='./attachments', help='Path to the output attachments folder')
     parser.add_argument('--user_id', type=str, help='Filter messages by user ID')
@@ -22,9 +23,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--download_attachments', action='store_true', help='Download all attachments')
     return parser.parse_args()
 
-def load_settings(settings_path: str) -> Dict[str, str]:
-    with open(settings_path, 'r') as f:
-        return json.load(f)
+def load_settings(config_file: str) -> Dict[str, str]:
+    return toml.load(config_file)
 
 def is_message_valid(message: discord.Message, args: argparse.Namespace) -> bool:
     if args.skip_message == 'bot' and message.author.bot:
@@ -66,9 +66,9 @@ def main():
 
     if not (token and channel_id):
         try:
-            settings = load_settings(args.settings)
-            token = settings.get('token')
-            channel_id = settings.get('channel_id')
+            settings = load_settings(args.config_file)
+            token = settings.get('token', token)
+            channel_id = settings.get('channel_id', channel_id)
         except Exception as e:
             logging.error(f"Failed to load settings: {e}")
 
