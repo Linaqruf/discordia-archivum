@@ -11,7 +11,7 @@ from pathlib import Path
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Discord message scraper')
-    parser.add_argument('--config_file', help='Path to the configuration file in TOML format')
+    parser.add_argument('--config_file', default='./config.toml', help='Path to the configuration file in TOML format')
     parser.add_argument('--output_json', default='./output.json', help='Path to the output JSON file')
     parser.add_argument('--output_folder', default='./attachments', help='Path to the output attachments folder')
     parser.add_argument('--user_id', type=str, help='Filter messages by user ID')
@@ -21,6 +21,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--token', type=str, help='Discord bot token')
     parser.add_argument('--channel_id', type=int, help='ID of the Discord channel')
     parser.add_argument('--download_attachments', action='store_true', help='Download all attachments')
+    parser.add_argument('--prompt', type=str, help='Only include messages that contain this word')
+    parser.add_argument('--undesired_words', type=str, help='Exclude messages that contain this word')
     return parser.parse_args()
 
 def load_settings(config_file: str) -> Dict[str, str]:
@@ -35,6 +37,14 @@ def is_message_valid(message: discord.Message, args: argparse.Namespace) -> bool
         return False
     if args.image_only and not message.attachments:
         return False
+    if args.undesired_words:
+        undesired_words = [word.strip() for word in args.undesired_words.split(',')]
+        if any(word in message.content for word in undesired_words):
+            return False
+    if args.prompt:
+        prompt = [word.strip() for word in args.prompt.split(',')]
+        if not any(word in message.content for word in prompt):
+            return False
     return True
 
 def construct_message_data(message: discord.Message) -> Dict[str, List[Dict[str, str]]]:
