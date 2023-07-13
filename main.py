@@ -22,6 +22,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--midjourney', action='store_true', help='Set user_id to 936929561302675456')
     parser.add_argument('--limit', type=int, default=100, help='Maximum number of messages to scrape')
     parser.add_argument('--download_attachments', action='store_true', help='Download all attachments')
+    parser.add_argument('--single', action='store_true', help='Only download non-grid images')
     parser.add_argument('--prompt', type=str, help='Only include messages that contain this word')
     parser.add_argument('--undesired_words', type=str, help='Exclude messages that contain this word')
     parser.add_argument('--style', choices=["default", "expressive", "cute", "scenic", "original", "raw"], help='Only proceed messages with "--style {value}" string')
@@ -174,18 +175,25 @@ def main():
             if args.download_attachments:
                 for attachment in message_data['attachments']:
                     category = message_data['metadata']['category'].lower()
-                    if "variations" in category:
-                        dir_path = os.path.join(args.output_folder, channel.name, 'variations')
-                    elif "zoom out" in category:
-                        dir_path = os.path.join(args.output_folder, channel.name, 'zoom_out')
-                    elif "pan" in category:
-                        dir_path = os.path.join(args.output_folder, channel.name, 'pan')
-                    elif "image" in category or "upscaled" in category:
-                        dir_path = os.path.join(args.output_folder, channel.name, 'single')
+                    if args.single:
+                        dir_path = os.path.join(args.output_folder, channel.name)
+                        if not category.startswith(("image", "upscaled")):
+                            continue
+                        
+                        await download_file(attachment['url'], dir_path, attachment['filename'])
                     else:
-                        dir_path = os.path.join(args.output_folder, channel.name, 'grid')
-                    
-                    await download_file(attachment['url'], dir_path, attachment['filename'])
+                        if "variations" in category:
+                            dir_path = os.path.join(args.output_folder, channel.name, 'variations')
+                        elif "zoom out" in category:
+                            dir_path = os.path.join(args.output_folder, channel.name, 'zoom_out')
+                        elif "pan" in category:
+                            dir_path = os.path.join(args.output_folder, channel.name, 'pan')
+                        elif "image" in category or "upscaled" in category:
+                            dir_path = os.path.join(args.output_folder, channel.name, 'single')
+                        else:
+                            dir_path = os.path.join(args.output_folder, channel.name, 'grid')
+                        
+                        await download_file(attachment['url'], dir_path, attachment['filename'])
                     
             data.append(message_data)
 
@@ -193,7 +201,7 @@ def main():
                 break
 
         save_to_json(data, args.output_json)
-        save_category(data, './experiment.json') 
+        # save_category(data, './experiment.json') 
         print_unique_metadata_keys(data)
         logging.info(f'Found {len(data)} messages in "{channel.name}"')
         await client.close()  # disconnect the client
