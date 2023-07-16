@@ -30,6 +30,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--version', choices=["1", "2", "3", "4", "5", "5.1", "5.2"], help='Only proceed messages with "--v {value}" string')
     parser.add_argument('--before_date', type=str, help='Only include messages before this date (YYYY-MM-DD format)')
     parser.add_argument('--after_date', type=str, help='Only include messages after this date (YYYY-MM-DD format)')
+    parser.add_argument('--range', type=int, help='Range of messages to download. Overrides --limit if both are provided.')
     return parser.parse_args()
 
 def load_settings(config_file: str) -> Dict[str, str]:
@@ -166,13 +167,15 @@ def main():
         logging.info(f'Scraping in "{channel.name}" as {client.user}')
         data = []
 
+        downloaded_attachments_count = 0
+
         async for message in channel.history(limit=args.limit): 
             if not is_message_valid(message, args, user_id):
                 continue
 
             message_data = construct_message_data(message)
 
-            if args.download_attachments:
+            if args.download_attachments and (args.range is None or downloaded_attachments_count < args.range):
                 for attachment in message_data['attachments']:
                     category = message_data['metadata']['category'].lower()
                     if args.single:
@@ -195,13 +198,19 @@ def main():
                         
                         await download_file(attachment['url'], dir_path, attachment['filename'])
                     
+                    downloaded_attachments_count += 1
+                    
+                    if args.range is not None and downloaded_attachments_count >= args.range:
+                        logging.info(f'Reached download limit of {args.range}. Stopping download and scraping process.')
+                        await client.close()
+                        return
+
             data.append(message_data)
 
             if args.limit and len(data) >= args.limit:
                 break
 
         save_to_json(data, args.output_json)
-        # save_category(data, './experiment.json') 
         print_unique_metadata_keys(data)
         logging.info(f'Found {len(data)} messages in "{channel.name}"')
         await client.close()  # disconnect the client
