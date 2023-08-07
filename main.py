@@ -197,7 +197,10 @@ def main():
                             dir_path = os.path.join(args.output_folder, channel.name, 'grid')
                         
                         await download_file(attachment['url'], dir_path, attachment['filename'])
-                    
+                    if args.debug:
+                        metadata_str = json.dumps(message_data['metadata'], indent=4, ensure_ascii=False)
+                        print(f"Downloaded {attachment['filename']} with metadata:\n{metadata_str}") 
+                        
                     downloaded_attachments_count += 1
                     
                     if args.range is not None and downloaded_attachments_count >= args.range:
