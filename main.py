@@ -31,6 +31,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--before_date', type=str, help='Only include messages before this date (YYYY-MM-DD format)')
     parser.add_argument('--after_date', type=str, help='Only include messages after this date (YYYY-MM-DD format)')
     parser.add_argument('--range', type=int, help='Range of messages to download. Overrides --limit if both are provided.')
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode.')
     return parser.parse_args()
 
 def load_settings(config_file: str) -> Dict[str, str]:
