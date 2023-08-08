@@ -170,6 +170,9 @@ def main():
         logging.info(f'Scraping in "{channel.name}" as {client.user}')
         data = []
 
+        if args.debug:
+            print(f"Message from {message.author.name} at {message.created_at}")
+
         downloaded_attachments_count = 0
 
         async for message in channel.history(limit=args.limit): 
@@ -200,10 +203,11 @@ def main():
                             dir_path = os.path.join(args.output_folder, channel.name, 'grid')
                         
                         await download_file(attachment['url'], dir_path, attachment['filename'])
+                        
                     if args.debug:
                         metadata_str = json.dumps(message_data['metadata'], indent=4, ensure_ascii=False)
-                        print(f"Scraped message from {message.author.name} at {message.created_at}")
-                        print(f"Downloaded {attachment['filename']} with metadata:\n{metadata_str}")
+                        print(f"Downloaded {attachment['filename']} with metadata:\n{metadata_str}") 
+
                         if args.download_attachments and args.show_image:
                             img_path = os.path.join(dir_path, attachment['filename'])
                             img = plt.imread(img_path)
@@ -213,8 +217,21 @@ def main():
                         
                     downloaded_attachments_count += 1
                     
+                    if args.range:
+                        print(f"Downloaded attachments: {downloaded_attachments_count}/{args.range}")
+
                     if args.range is not None and downloaded_attachments_count >= args.range:
                         logging.info(f'Reached download limit of {args.range}. Stopping download and scraping process.')
+    
+                        # Save the data to a JSON file
+                        save_to_json(data, args.output_json)
+                        
+                        # Print the unique metadata keys
+                        print_unique_metadata_keys(data)
+    
+                        # Log the total number of found messages
+                        logging.info(f'Found {len(data)} messages in "{channel.name}"')
+                        
                         await client.close()
                         return
 
