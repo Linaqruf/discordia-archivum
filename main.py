@@ -170,14 +170,15 @@ def main():
         logging.info(f'Scraping in "{channel.name}" as {client.user}')
         data = []
 
-        if args.debug:
-            print(f"Message from {message.author.name} at {message.created_at}")
 
         downloaded_attachments_count = 0
 
         async for message in channel.history(limit=args.limit): 
             if not is_message_valid(message, args, user_id):
                 continue
+                
+            if args.debug:
+                print(f"Message from {message.author.name} at {message.created_at}")
 
             message_data = construct_message_data(message)
 
