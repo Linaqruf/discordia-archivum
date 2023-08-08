@@ -10,7 +10,6 @@ from typing import Dict, List, Optional, Any
 from httpx import AsyncClient
 from pathlib import Path
 from PIL import Image
-import matplotlib.pyplot as plt
 
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Discord message scraper')
@@ -33,7 +32,6 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument('--after_date', type=str, help='Only include messages after this date (YYYY-MM-DD format)')
     parser.add_argument('--range', type=int, help='Range of messages to download. Overrides --limit if both are provided.')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode.')
-    parser.add_argument('--show_image', action='store_true', help='Display the image if debug is true.')
     return parser.parse_args()
 
 def load_settings(config_file: str) -> Dict[str, str]:
@@ -208,14 +206,7 @@ def main():
                     if args.debug:
                         metadata_str = json.dumps(message_data['metadata'], indent=4, ensure_ascii=False)
                         print(f"Downloaded {attachment['filename']} with metadata:\n{metadata_str}") 
-
-                        if args.download_attachments and args.show_image:
-                            img_path = os.path.join(dir_path, attachment['filename'])
-                            img = plt.imread(img_path)
-                            plt.imshow(img)
-                            plt.axis('off')  # to hide the axis values
-                            plt.show()
-                        
+                      
                     downloaded_attachments_count += 1
                     
                     if args.range:
@@ -224,13 +215,8 @@ def main():
                     if args.range is not None and downloaded_attachments_count >= args.range:
                         logging.info(f'Reached download limit of {args.range}. Stopping download and scraping process.')
     
-                        # Save the data to a JSON file
                         save_to_json(data, args.output_json)
-                        
-                        # Print the unique metadata keys
                         print_unique_metadata_keys(data)
-    
-                        # Log the total number of found messages
                         logging.info(f'Found {len(data)} messages in "{channel.name}"')
                         
                         await client.close()
